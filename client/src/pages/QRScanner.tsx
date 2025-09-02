@@ -55,6 +55,8 @@ export default function QRScanner() {
   const findProductByCode = async (code: string) => {
     try {
       const products = await api.getProducts()
+      console.log("Searching for code:", code)
+      console.log("Available products:", products.length)
       
       // Search by QR code, barcode, or ID
       const foundProduct = products.find(p => 
@@ -63,6 +65,8 @@ export default function QRScanner() {
         p.id === code ||
         (p.qr_code && p.qr_code.includes(code))
       )
+      
+      console.log("Found product:", foundProduct)
       
       if (foundProduct) {
         setProduct(foundProduct)
@@ -74,7 +78,7 @@ export default function QRScanner() {
         setProduct(null)
         toast({
           title: "Product Not Found",
-          description: "No product matches this QR code",
+          description: `No product matches this QR code: ${code}`,
           variant: "destructive",
         })
       }

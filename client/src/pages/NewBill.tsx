@@ -156,13 +156,19 @@ export default function NewBill() {
   }
 
   const handleQRCodeScan = async (qrData: string) => {
+    console.log("Scanning QR Code:", qrData)
+    console.log("Available products:", products.length)
+    
     try {
       // Try to parse as JSON first (for our generated QR codes)
       const parsed = JSON.parse(qrData)
+      console.log("Parsed QR data:", parsed)
       
       if (parsed.type === "pantry_pal_product" && parsed.id) {
-        // Find the product by ID
-        const product = products.find(p => p.id === parsed.id)
+        // Find the product by barcode (since QR generated ID is stored in barcode field)
+        const product = products.find(p => p.barcode === parsed.id || p.id === parsed.id)
+        console.log("Found product by QR ID:", product)
+        
         if (product) {
           addProductToBill(product)
           toast({
@@ -171,11 +177,22 @@ export default function NewBill() {
           })
           setIsScannerOpen(false)
         } else {
-          toast({
-            title: "Product Not Found",
-            description: "This QR code doesn't match any product in inventory",
-            variant: "destructive",
-          })
+          // Try to find by name as fallback
+          const productByName = products.find(p => p.name === parsed.name)
+          if (productByName) {
+            addProductToBill(productByName)
+            toast({
+              title: "Product Added!",
+              description: `${productByName.name} added to bill`,
+            })
+            setIsScannerOpen(false)
+          } else {
+            toast({
+              title: "Product Not Found",
+              description: `QR Code ID: ${parsed.id} - No matching product found in inventory`,
+              variant: "destructive",
+            })
+          }
         }
       } else {
         // Try to find by barcode or product ID
@@ -196,6 +213,7 @@ export default function NewBill() {
         }
       }
     } catch (error) {
+      console.log("QR Code is not JSON, trying direct match")
       // Not a valid JSON, try to find by simple ID
       const product = products.find(p => p.barcode === qrData || p.id === qrData)
       if (product) {
@@ -208,7 +226,7 @@ export default function NewBill() {
       } else {
         toast({
           title: "Invalid QR Code",
-          description: "This QR code is not recognized",
+          description: `Raw data: ${qrData} - This QR code is not recognized`,
           variant: "destructive",
         })
       }
