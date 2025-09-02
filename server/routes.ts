@@ -29,7 +29,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/products", async (req, res) => {
     try {
-      const product = await storage.createProduct(req.body);
+      // Convert empty date strings to null to avoid PostgreSQL errors
+      const productData = {
+        ...req.body,
+        manufacturing_date: req.body.manufacturing_date || null,
+        expiry_date: req.body.expiry_date || null,
+      };
+      
+      const product = await storage.createProduct(productData);
       res.status(201).json(product);
     } catch (error) {
       console.error("Error creating product:", error);
@@ -39,7 +46,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.put("/api/products/:id", async (req, res) => {
     try {
-      const product = await storage.updateProduct(req.params.id, req.body);
+      // Convert empty date strings to null to avoid PostgreSQL errors
+      const productData = {
+        ...req.body,
+        manufacturing_date: req.body.manufacturing_date || null,
+        expiry_date: req.body.expiry_date || null,
+      };
+      
+      const product = await storage.updateProduct(req.params.id, productData);
       if (!product) {
         return res.status(404).json({ error: "Product not found" });
       }
