@@ -4,25 +4,11 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { supabase } from "@/integrations/supabase/client"
+import { api, type Product } from "@/lib/api"
 import { Link } from "react-router-dom"
 import { Plus, Search, Package, QrCode } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 
-interface Product {
-  id: string
-  name: string
-  category: string
-  brand?: string
-  mrp: number
-  buying_cost: number
-  quantity_in_stock: number
-  min_stock_level: number
-  unit: string
-  expiry_date?: string
-  qr_code: string
-  created_at: string
-}
 
 export default function Inventory() {
   const [products, setProducts] = useState<Product[]>([])
@@ -39,7 +25,7 @@ export default function Inventory() {
     const filtered = products.filter(product =>
       product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       product.category.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      product.brand?.toLowerCase().includes(searchTerm.toLowerCase())
+      (product.brand && product.brand.toLowerCase().includes(searchTerm.toLowerCase()))
     )
     setFilteredProducts(filtered)
   }, [products, searchTerm])
@@ -47,14 +33,8 @@ export default function Inventory() {
   const loadProducts = async () => {
     try {
       setLoading(true)
-      const { data, error } = await supabase
-        .from('products')
-        .select('*')
-        .order('name')
-
-      if (error) throw error
-
-      setProducts(data || [])
+      const products = await api.getProducts()
+      setProducts(products)
     } catch (error) {
       console.error('Error loading products:', error)
       toast({
@@ -68,9 +48,11 @@ export default function Inventory() {
   }
 
   const getStockStatus = (product: Product) => {
-    if (product.quantity_in_stock === 0) {
+    const stock = product.quantity_in_stock || 0;
+    const minLevel = product.min_stock_level || 0;
+    if (stock === 0) {
       return { label: "Out of Stock", variant: "destructive" as const }
-    } else if (product.quantity_in_stock <= product.min_stock_level) {
+    } else if (stock <= minLevel) {
       return { label: "Low Stock", variant: "secondary" as const }
     } else {
       return { label: "In Stock", variant: "default" as const }
@@ -159,7 +141,7 @@ export default function Inventory() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-orange-600">
-              {products.filter(p => p.quantity_in_stock <= p.min_stock_level).length}
+              {products.filter(p => (p.quantity_in_stock || 0) <= (p.min_stock_level || 0)).length}
             </div>
           </CardContent>
         </Card>
@@ -196,7 +178,7 @@ export default function Inventory() {
                 <TableBody>
                   {filteredProducts.map((product) => {
                     const stockStatus = getStockStatus(product)
-                    const expiryStatus = getExpiryStatus(product.expiry_date)
+                    const expiryStatus = getExpiryStatus(product.expiry_date || undefined)
                     
                     return (
                       <TableRow key={product.id}>

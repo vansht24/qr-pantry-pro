@@ -2,7 +2,7 @@ import { useEffect, useState } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { supabase } from "@/integrations/supabase/client"
+import { api, type DashboardStats, type Product } from "@/lib/api"
 import { Link } from "react-router-dom"
 import { 
   Package, 
@@ -13,24 +13,6 @@ import {
   Users
 } from "lucide-react"
 
-interface DashboardStats {
-  totalProducts: number
-  lowStock: number
-  todaySales: number
-  totalRevenue: number
-  expiringProducts: number
-  totalCustomers: number
-}
-
-interface Product {
-  id: string
-  name: string
-  quantity_in_stock: number
-  min_stock_level: number
-  expiry_date: string
-  mrp: number
-}
-
 export default function Dashboard() {
   const [stats, setStats] = useState<DashboardStats>({
     totalProducts: 0,
@@ -38,10 +20,10 @@ export default function Dashboard() {
     todaySales: 0,
     totalRevenue: 0,
     expiringProducts: 0,
-    totalCustomers: 0
+    totalCustomers: 0,
+    lowStockProducts: [],
+    expiringProductsList: []
   })
-  const [lowStockProducts, setLowStockProducts] = useState<Product[]>([])
-  const [expiringProducts, setExpiringProducts] = useState<Product[]>([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -51,52 +33,8 @@ export default function Dashboard() {
   const loadDashboardData = async () => {
     try {
       setLoading(true)
-
-      // Get products stats
-      const { data: products } = await supabase
-        .from('products')
-        .select('*')
-
-      // Get bills for today's sales
-      const today = new Date().toISOString().split('T')[0]
-      const { data: todayBills } = await supabase
-        .from('bills')
-        .select('final_amount')
-        .gte('created_at', `${today}T00:00:00`)
-        .lt('created_at', `${today}T23:59:59`)
-
-      // Get all bills for total revenue
-      const { data: allBills } = await supabase
-        .from('bills')
-        .select('final_amount')
-
-      // Get customers count
-      const { data: customers } = await supabase
-        .from('customers')
-        .select('id')
-
-      if (products) {
-        const lowStock = products.filter(p => p.quantity_in_stock <= p.min_stock_level)
-        const expiring = products.filter(p => {
-          if (!p.expiry_date) return false
-          const expiryDate = new Date(p.expiry_date)
-          const now = new Date()
-          const daysDiff = Math.ceil((expiryDate.getTime() - now.getTime()) / (1000 * 3600 * 24))
-          return daysDiff <= 7 && daysDiff >= 0
-        })
-
-        setLowStockProducts(lowStock)
-        setExpiringProducts(expiring)
-
-        setStats({
-          totalProducts: products.length,
-          lowStock: lowStock.length,
-          todaySales: todayBills?.length || 0,
-          totalRevenue: allBills?.reduce((sum, bill) => sum + Number(bill.final_amount), 0) || 0,
-          expiringProducts: expiring.length,
-          totalCustomers: customers?.length || 0
-        })
-      }
+      const dashboardStats = await api.getDashboardStats()
+      setStats(dashboardStats)
     } catch (error) {
       console.error('Error loading dashboard data:', error)
     } finally {
@@ -128,16 +66,16 @@ export default function Dashboard() {
     },
     {
       title: "Total Revenue",
-      value: `₹${stats.totalRevenue.toLocaleString('en-IN')}`,
-      description: "All time earnings",
+      value: `₹${stats.totalRevenue.toLocaleString()}`,
+      description: "All time sales",
       icon: IndianRupee,
-      color: "text-emerald-600"
+      color: "text-purple-600"
     },
     {
       title: "Expiring Soon",
       value: stats.expiringProducts,
       description: "Within 7 days",
-      icon: AlertTriangle,
+      icon: TrendingUp,
       color: "text-red-600"
     },
     {
@@ -145,46 +83,62 @@ export default function Dashboard() {
       value: stats.totalCustomers,
       description: "Registered customers",
       icon: Users,
-      color: "text-purple-600"
+      color: "text-indigo-600"
     }
   ]
 
-  return (
-    <div className="space-y-6">
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+  if (loading) {
+    return (
+      <div className="space-y-6">
         <div>
           <h1 className="text-3xl font-bold text-foreground">Dashboard</h1>
-          <p className="text-muted-foreground">Welcome back! Here's your store overview.</p>
+          <p className="text-muted-foreground">Overview of your store's performance</p>
         </div>
-        <div className="flex gap-2">
-          <Button asChild>
-            <Link to="/billing/new">New Bill</Link>
-          </Button>
-          <Button variant="outline" asChild>
-            <Link to="/inventory/add">Add Product</Link>
-          </Button>
-        </div>
-      </div>
-
-      {/* Stats Grid */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-        {statCards.map((stat, index) => {
-          const Icon = stat.icon
-          return (
-            <Card key={index}>
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <Card key={i}>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">{stat.title}</CardTitle>
-                <Icon className={`h-4 w-4 ${stat.color}`} />
+                <CardTitle className="text-sm font-medium">Loading...</CardTitle>
+                <div className="h-4 w-4 bg-gray-200 rounded animate-pulse" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{stat.value}</div>
-                <p className="text-xs text-muted-foreground">{stat.description}</p>
+                <div className="text-2xl font-bold">--</div>
+                <p className="text-xs text-muted-foreground">Loading...</p>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div className="space-y-6">
+      <div>
+        <h1 className="text-3xl font-bold text-foreground">Dashboard</h1>
+        <p className="text-muted-foreground">Overview of your store's performance</p>
+      </div>
+
+      {/* Stats Cards */}
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+        {statCards.map((card) => {
+          const Icon = card.icon
+          return (
+            <Card key={card.title}>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">{card.title}</CardTitle>
+                <Icon className={`h-4 w-4 ${card.color}`} />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{card.value}</div>
+                <p className="text-xs text-muted-foreground">{card.description}</p>
               </CardContent>
             </Card>
           )
         })}
       </div>
 
+      {/* Alerts Section */}
       <div className="grid gap-6 md:grid-cols-2">
         {/* Low Stock Alert */}
         <Card>
@@ -193,27 +147,27 @@ export default function Dashboard() {
               <AlertTriangle className="h-5 w-5 text-orange-600" />
               Low Stock Alert
             </CardTitle>
-            <CardDescription>Products that need immediate restocking</CardDescription>
+            <CardDescription>Products running low on stock</CardDescription>
           </CardHeader>
           <CardContent>
-            {lowStockProducts.length === 0 ? (
-              <p className="text-muted-foreground">No items are low on stock!</p>
+            {stats.lowStockProducts.length === 0 ? (
+              <p className="text-muted-foreground">All products are well stocked!</p>
             ) : (
               <div className="space-y-3">
-                {lowStockProducts.slice(0, 5).map(product => (
+                {stats.lowStockProducts.slice(0, 5).map(product => (
                   <div key={product.id} className="flex items-center justify-between">
                     <div>
                       <p className="font-medium">{product.name}</p>
                       <p className="text-sm text-muted-foreground">
-                        Stock: {product.quantity_in_stock} / Min: {product.min_stock_level}
+                        Stock: {product.quantity_in_stock || 0} | Min: {product.min_stock_level || 0}
                       </p>
                     </div>
-                    <Badge variant="destructive">Low</Badge>
+                    <Badge variant="secondary">Low Stock</Badge>
                   </div>
                 ))}
-                {lowStockProducts.length > 5 && (
+                {stats.lowStockProducts.length > 5 && (
                   <Button variant="outline" size="sm" asChild className="w-full">
-                    <Link to="/inventory">View All ({lowStockProducts.length})</Link>
+                    <Link to="/inventory">View All ({stats.lowStockProducts.length})</Link>
                   </Button>
                 )}
               </div>
@@ -231,24 +185,24 @@ export default function Dashboard() {
             <CardDescription>Products expiring within 7 days</CardDescription>
           </CardHeader>
           <CardContent>
-            {expiringProducts.length === 0 ? (
+            {stats.expiringProductsList.length === 0 ? (
               <p className="text-muted-foreground">No products expiring soon!</p>
             ) : (
               <div className="space-y-3">
-                {expiringProducts.slice(0, 5).map(product => (
+                {stats.expiringProductsList.slice(0, 5).map(product => (
                   <div key={product.id} className="flex items-center justify-between">
                     <div>
                       <p className="font-medium">{product.name}</p>
                       <p className="text-sm text-muted-foreground">
-                        Expires: {new Date(product.expiry_date).toLocaleDateString('en-IN')}
+                        Expires: {product.expiry_date ? new Date(product.expiry_date).toLocaleDateString('en-IN') : 'No expiry date'}
                       </p>
                     </div>
                     <Badge variant="destructive">Expiring</Badge>
                   </div>
                 ))}
-                {expiringProducts.length > 5 && (
+                {stats.expiringProductsList.length > 5 && (
                   <Button variant="outline" size="sm" asChild className="w-full">
-                    <Link to="/expiry">View All ({expiringProducts.length})</Link>
+                    <Link to="/expiry">View All ({stats.expiringProductsList.length})</Link>
                   </Button>
                 )}
               </div>
