@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -7,10 +7,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { api, type Product, type Customer } from "@/lib/api"
 import { Link, useNavigate } from "react-router-dom"
-import { ArrowLeft, Plus, Trash2, QrCode, Receipt } from "lucide-react"
+import { ArrowLeft, Plus, Trash2, QrCode, Receipt, Camera, Play, Square } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
+import QrScanner from "qr-scanner"
 
 interface BillItem {
   product: Product
@@ -29,8 +31,12 @@ export default function NewBill() {
   const [taxAmount, setTaxAmount] = useState<number>(0)
   const [searchTerm, setSearchTerm] = useState("")
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [isScannerOpen, setIsScannerOpen] = useState(false)
+  const [isScanning, setIsScanning] = useState(false)
+  const [scanner, setScanner] = useState<QrScanner | null>(null)
   const { toast } = useToast()
   const navigate = useNavigate()
+  const videoRef = useRef<HTMLVideoElement>(null)
 
   useEffect(() => {
     loadData()
@@ -104,6 +110,111 @@ export default function NewBill() {
     return calculateSubtotal() + taxAmount - discountAmount
   }
 
+  const startCameraScanning = async () => {
+    if (!videoRef.current) return
+    
+    try {
+      setIsScanning(true)
+      const qrScanner = new QrScanner(
+        videoRef.current,
+        (result) => {
+          handleQRCodeScan(result.data)
+          stopCameraScanning()
+        },
+        {
+          returnDetailedScanResult: true,
+          highlightScanRegion: true,
+          highlightCodeOutline: true,
+        }
+      )
+      
+      await qrScanner.start()
+      setScanner(qrScanner)
+      
+      toast({
+        title: "Camera Started",
+        description: "Point your camera at a QR code to add to bill",
+      })
+    } catch (error) {
+      console.error('Error starting camera:', error)
+      toast({
+        title: "Camera Error",
+        description: "Failed to access camera. Please check permissions.",
+        variant: "destructive",
+      })
+      setIsScanning(false)
+    }
+  }
+
+  const stopCameraScanning = () => {
+    if (scanner) {
+      scanner.stop()
+      scanner.destroy()
+      setScanner(null)
+    }
+    setIsScanning(false)
+  }
+
+  const handleQRCodeScan = async (qrData: string) => {
+    try {
+      // Try to parse as JSON first (for our generated QR codes)
+      const parsed = JSON.parse(qrData)
+      
+      if (parsed.type === "pantry_pal_product" && parsed.id) {
+        // Find the product by ID
+        const product = products.find(p => p.id === parsed.id)
+        if (product) {
+          addProductToBill(product)
+          toast({
+            title: "Product Added!",
+            description: `${product.name} added to bill`,
+          })
+          setIsScannerOpen(false)
+        } else {
+          toast({
+            title: "Product Not Found",
+            description: "This QR code doesn't match any product in inventory",
+            variant: "destructive",
+          })
+        }
+      } else {
+        // Try to find by barcode or product ID
+        const product = products.find(p => p.barcode === qrData || p.id === qrData)
+        if (product) {
+          addProductToBill(product)
+          toast({
+            title: "Product Added!",
+            description: `${product.name} added to bill`,
+          })
+          setIsScannerOpen(false)
+        } else {
+          toast({
+            title: "Product Not Found",
+            description: "No product matches this QR code",
+            variant: "destructive",
+          })
+        }
+      }
+    } catch (error) {
+      // Not a valid JSON, try to find by simple ID
+      const product = products.find(p => p.barcode === qrData || p.id === qrData)
+      if (product) {
+        addProductToBill(product)
+        toast({
+          title: "Product Added!",
+          description: `${product.name} added to bill`,
+        })
+        setIsScannerOpen(false)
+      } else {
+        toast({
+          title: "Invalid QR Code",
+          description: "This QR code is not recognized",
+          variant: "destructive",
+        })
+      }
+    }
+  }
+
   const handleSubmit = async () => {
     if (billItems.length === 0) {
       toast({
@@ -155,6 +266,15 @@ export default function NewBill() {
     }
   }
 
+  useEffect(() => {
+    return () => {
+      if (scanner) {
+        scanner.stop()
+        scanner.destroy()
+      }
+    }
+  }, [scanner])
+
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-4">
@@ -178,14 +298,65 @@ export default function NewBill() {
               <CardDescription>Search and add products to the bill</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="search">Search Products</Label>
-                <Input
-                  id="search"
-                  placeholder="Search by name, category, or brand..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                />
+              <div className="flex gap-2">
+                <div className="flex-1 space-y-2">
+                  <Label htmlFor="search">Search Products</Label>
+                  <Input
+                    id="search"
+                    placeholder="Search by name, category, or brand..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>&nbsp;</Label>
+                  <Dialog open={isScannerOpen} onOpenChange={setIsScannerOpen}>
+                    <DialogTrigger asChild>
+                      <Button variant="outline" className="h-10">
+                        <QrCode className="h-4 w-4" />
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent className="sm:max-w-md">
+                      <DialogHeader>
+                        <DialogTitle>Scan QR Code</DialogTitle>
+                        <DialogDescription>
+                          Scan a product QR code to add it to the bill
+                        </DialogDescription>
+                      </DialogHeader>
+                      <div className="space-y-4">
+                        <div className="relative">
+                          <video
+                            ref={videoRef}
+                            className="w-full h-64 bg-black rounded-lg"
+                            style={{ display: isScanning ? 'block' : 'none' }}
+                          />
+                          {!isScanning && (
+                            <div className="border-2 border-dashed rounded-lg p-8 text-center bg-muted/50 h-64 flex flex-col justify-center">
+                              <Camera className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
+                              <p className="text-muted-foreground mb-4">Ready to scan QR codes</p>
+                              <Button onClick={startCameraScanning} className="mx-auto">
+                                <Play className="h-4 w-4 mr-2" />
+                                Start Camera
+                              </Button>
+                            </div>
+                          )}
+                          {isScanning && (
+                            <div className="absolute top-2 right-2 z-10">
+                              <Button 
+                                onClick={stopCameraScanning}
+                                variant="destructive"
+                                size="sm"
+                              >
+                                <Square className="h-4 w-4 mr-2" />
+                                Stop
+                              </Button>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </DialogContent>
+                  </Dialog>
+                </div>
               </div>
               
               <div className="max-h-96 overflow-y-auto space-y-2">

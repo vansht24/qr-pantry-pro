@@ -5,25 +5,31 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Badge } from "@/components/ui/badge"
 import { api, type Product } from "@/lib/api"
-import { QrCode, Camera, Search, Package } from "lucide-react"
+import { QrCode, Camera, Search, Package, Play, Square } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
+import QrScanner from "qr-scanner"
 
 export default function QRScanner() {
   const [manualCode, setManualCode] = useState("")
   const [scannedData, setScannedData] = useState<any>(null)
   const [product, setProduct] = useState<Product | null>(null)
   const [isSearching, setIsSearching] = useState(false)
+  const [isScanning, setIsScanning] = useState(false)
+  const [scanner, setScanner] = useState<QrScanner | null>(null)
   const { toast } = useToast()
   const videoRef = useRef<HTMLVideoElement>(null)
 
   const handleManualScan = async () => {
     if (!manualCode.trim()) return
-    
+    await processQRCode(manualCode)
+  }
+
+  const processQRCode = async (qrData: string) => {
     setIsSearching(true)
     try {
       // Try to parse as JSON first (for our generated QR codes)
       try {
-        const parsed = JSON.parse(manualCode)
+        const parsed = JSON.parse(qrData)
         setScannedData(parsed)
         
         // If it has a product ID, try to fetch the product
@@ -32,7 +38,7 @@ export default function QRScanner() {
         }
       } catch {
         // If not JSON, treat as simple product ID or barcode
-        await findProductByCode(manualCode)
+        await findProductByCode(qrData)
       }
     } catch (error) {
       console.error('Error scanning code:', error)
@@ -112,11 +118,70 @@ export default function QRScanner() {
     return null
   }
 
+  const startCameraScanning = async () => {
+    if (!videoRef.current) return
+    
+    try {
+      setIsScanning(true)
+      const qrScanner = new QrScanner(
+        videoRef.current,
+        (result) => {
+          toast({
+            title: "QR Code Detected!",
+            description: "Processing scanned data...",
+          })
+          processQRCode(result.data)
+          stopCameraScanning()
+        },
+        {
+          returnDetailedScanResult: true,
+          highlightScanRegion: true,
+          highlightCodeOutline: true,
+        }
+      )
+      
+      await qrScanner.start()
+      setScanner(qrScanner)
+      
+      toast({
+        title: "Camera Started",
+        description: "Point your camera at a QR code to scan",
+      })
+    } catch (error) {
+      console.error('Error starting camera:', error)
+      toast({
+        title: "Camera Error",
+        description: "Failed to access camera. Please check permissions.",
+        variant: "destructive",
+      })
+      setIsScanning(false)
+    }
+  }
+
+  const stopCameraScanning = () => {
+    if (scanner) {
+      scanner.stop()
+      scanner.destroy()
+      setScanner(null)
+    }
+    setIsScanning(false)
+  }
+
   const resetScan = () => {
     setManualCode("")
     setScannedData(null)
     setProduct(null)
+    stopCameraScanning()
   }
+
+  useEffect(() => {
+    return () => {
+      if (scanner) {
+        scanner.stop()
+        scanner.destroy()
+      }
+    }
+  }, [scanner])
 
   return (
     <div className="space-y-6">
@@ -155,15 +220,37 @@ export default function QRScanner() {
               </div>
             </div>
 
-            {/* Camera Scanner Placeholder */}
+            {/* Camera Scanner */}
             <div className="space-y-4">
               <Label>Camera Scanner</Label>
-              <div className="border-2 border-dashed rounded-lg p-8 text-center bg-muted/50">
-                <Camera className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
-                <p className="text-muted-foreground mb-4">Camera scanner coming soon</p>
-                <p className="text-sm text-muted-foreground">
-                  For now, please use the manual entry above to scan QR codes
-                </p>
+              <div className="relative">
+                <video
+                  ref={videoRef}
+                  className="w-full h-64 bg-black rounded-lg"
+                  style={{ display: isScanning ? 'block' : 'none' }}
+                />
+                {!isScanning && (
+                  <div className="border-2 border-dashed rounded-lg p-8 text-center bg-muted/50 h-64 flex flex-col justify-center">
+                    <Camera className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
+                    <p className="text-muted-foreground mb-4">Ready to scan QR codes</p>
+                    <Button onClick={startCameraScanning} className="mx-auto">
+                      <Play className="h-4 w-4 mr-2" />
+                      Start Camera
+                    </Button>
+                  </div>
+                )}
+                {isScanning && (
+                  <div className="absolute top-2 right-2 z-10">
+                    <Button 
+                      onClick={stopCameraScanning}
+                      variant="destructive"
+                      size="sm"
+                    >
+                      <Square className="h-4 w-4 mr-2" />
+                      Stop
+                    </Button>
+                  </div>
+                )}
               </div>
             </div>
 

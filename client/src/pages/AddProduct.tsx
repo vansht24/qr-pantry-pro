@@ -48,8 +48,14 @@ export default function AddProduct() {
       id: productId,
       name: formData.name,
       category: formData.category,
-      mrp: formData.mrp,
-      timestamp: new Date().toISOString()
+      brand: formData.brand,
+      mrp: parseFloat(formData.mrp) || 0,
+      buying_cost: parseFloat(formData.buying_cost) || 0,
+      manufacturing_date: formData.manufacturing_date,
+      expiry_date: formData.expiry_date,
+      unit: formData.unit,
+      timestamp: new Date().toISOString(),
+      type: "pantry_pal_product"
     })
     setGeneratedQR(qrData)
     setFormData(prev => ({ ...prev, barcode: productId }))
@@ -272,20 +278,49 @@ export default function AddProduct() {
             <CardContent className="space-y-4">
               <Button 
                 onClick={generateQRCode} 
-                disabled={!formData.name}
+                disabled={!formData.name || !formData.mrp || !formData.buying_cost}
                 className="w-full"
               >
                 Generate QR Code
               </Button>
               
+              {(!formData.name || !formData.mrp || !formData.buying_cost) && (
+                <p className="text-xs text-muted-foreground text-center">
+                  Fill name, MRP and buying cost to generate QR code
+                </p>
+              )}
+              
               {generatedQR && (
-                <div className="space-y-2">
+                <div className="space-y-3">
                   <div className="bg-white p-4 rounded-lg border">
                     <QRCode value={generatedQR} size={200} className="w-full h-auto" />
                   </div>
-                  <p className="text-sm text-muted-foreground text-center">
-                    QR Code for {formData.name}
-                  </p>
+                  <div className="text-xs space-y-1 text-center">
+                    <p className="font-medium text-foreground">{formData.name}</p>
+                    <p className="text-muted-foreground">MRP: ₹{formData.mrp}</p>
+                    {formData.expiry_date && (
+                      <p className="text-muted-foreground">
+                        Exp: {new Date(formData.expiry_date).toLocaleDateString('en-IN')}
+                      </p>
+                    )}
+                    <p className="text-muted-foreground">ID: {formData.barcode}</p>
+                  </div>
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    className="w-full"
+                    onClick={() => {
+                      const canvas = document.querySelector('canvas')
+                      if (canvas) {
+                        const link = document.createElement('a')
+                        link.download = `qr-${formData.name.replace(/[^a-zA-Z0-9]/g, '-')}.png`
+                        link.href = canvas.toDataURL()
+                        link.click()
+                      }
+                    }}
+                  >
+                    Download QR Code
+                  </Button>
                 </div>
               )}
             </CardContent>
