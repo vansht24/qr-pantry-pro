@@ -8,51 +8,55 @@ All colors MUST be HSL.
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
+    /* Pantry Pal Indian Grocery Store Theme */
+    --background: 45 20% 97%;
+    --foreground: 25 15% 15%;
 
     --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
+    --card-foreground: 25 15% 15%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
+    --popover-foreground: 25 15% 15%;
 
-    --primary: 222.2 47.4% 11.2%;
-    --primary-foreground: 210 40% 98%;
+    --primary: 25 95% 53%; /* Vibrant saffron orange */
+    --primary-foreground: 0 0% 100%;
 
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
+    --secondary: 120 40% 85%; /* Light mint green */
+    --secondary-foreground: 25 15% 15%;
 
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
+    --muted: 45 30% 95%;
+    --muted-foreground: 25 10% 45%;
 
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
+    --accent: 35 80% 60%; /* Warm turmeric yellow */
+    --accent-foreground: 25 15% 15%;
 
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 98%;
 
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 222.2 84% 4.9%;
+    --border: 45 25% 88%;
+    --input: 45 25% 88%;
+    --ring: 25 95% 53%;
 
-    --radius: 0.5rem;
+    --success: 120 60% 50%; /* Fresh vegetable green */
+    --warning: 35 80% 60%; /* Spice yellow */
+    --info: 200 80% 60%; /* Clear blue */
 
-    --sidebar-background: 0 0% 98%;
+    --gradient-primary: linear-gradient(135deg, hsl(25 95% 53%), hsl(35 80% 60%));
+    --gradient-secondary: linear-gradient(135deg, hsl(120 40% 85%), hsl(120 60% 80%));
+    
+    --shadow-soft: 0 2px 8px hsl(25 95% 53% / 0.1);
+    --shadow-medium: 0 4px 16px hsl(25 95% 53% / 0.15);
 
-    --sidebar-foreground: 240 5.3% 26.1%;
+    --radius: 0.75rem;
 
-    --sidebar-primary: 240 5.9% 10%;
-
-    --sidebar-primary-foreground: 0 0% 98%;
-
-    --sidebar-accent: 240 4.8% 95.9%;
-
-    --sidebar-accent-foreground: 240 5.9% 10%;
-
-    --sidebar-border: 220 13% 91%;
-
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    --sidebar-background: 25 95% 53%;
+    --sidebar-foreground: 0 0% 100%;
+    --sidebar-primary: 0 0% 100%;
+    --sidebar-primary-foreground: 25 95% 53%;
+    --sidebar-accent: 25 85% 48%;
+    --sidebar-accent-foreground: 0 0% 100%;
+    --sidebar-border: 25 85% 48%;
+    --sidebar-ring: 0 0% 100%;
   }
 
   .dark {
