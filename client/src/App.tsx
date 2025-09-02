@@ -1,17 +1,37 @@
-// Temporary simplified app for debugging
-const App = () => {
-  return (
-    <div style={{ padding: '20px', fontFamily: 'Arial, sans-serif' }}>
-      <h1>Pantry Pal - Inventory Management</h1>
-      <p>App is loading successfully!</p>
-      <p>Time: {new Date().toLocaleString()}</p>
-      <div style={{ marginTop: '20px' }}>
-        <button onClick={() => window.location.href = '/restore'}>
-          Restore Full App
-        </button>
-      </div>
-    </div>
-  );
-};
+import { Toaster } from "@/components/ui/toaster";
+import { Toaster as Sonner } from "@/components/ui/sonner";
+import { TooltipProvider } from "@/components/ui/tooltip";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
+import Index from "./pages/Index";
+import Inventory from "./pages/Inventory";
+import NotFound from "./pages/NotFound";
+import { DashboardLayout } from "./components/layout/DashboardLayout";
+
+const queryClient = new QueryClient();
+
+const App = () => (
+  <QueryClientProvider client={queryClient}>
+    <TooltipProvider>
+      <Toaster />
+      <Sonner />
+      <BrowserRouter>
+        <Routes>
+          <Route path="/" element={<Index />} />
+          <Route path="/inventory" element={<DashboardLayout><Inventory /></DashboardLayout>} />
+          <Route path="/inventory/add" element={<DashboardLayout><div>Add Product Page - Coming Soon</div></DashboardLayout>} />
+          <Route path="/billing" element={<DashboardLayout><div>Billing Page - Coming Soon</div></DashboardLayout>} />
+          <Route path="/billing/new" element={<DashboardLayout><div>New Bill Page - Coming Soon</div></DashboardLayout>} />
+          <Route path="/qr-scanner" element={<DashboardLayout><div>QR Scanner - Coming Soon</div></DashboardLayout>} />
+          <Route path="/customers" element={<DashboardLayout><div>Customers Page - Coming Soon</div></DashboardLayout>} />
+          <Route path="/reports" element={<DashboardLayout><div>Reports Page - Coming Soon</div></DashboardLayout>} />
+          <Route path="/expiry" element={<DashboardLayout><div>Expiry Alerts - Coming Soon</div></DashboardLayout>} />
+          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+          <Route path="*" element={<NotFound />} />
+        </Routes>
+      </BrowserRouter>
+    </TooltipProvider>
+  </QueryClientProvider>
+);
 
 export default App;
