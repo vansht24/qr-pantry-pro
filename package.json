@@ -52,6 +52,7 @@
     "date-fns": "^3.6.0",
     "drizzle-kit": "^0.31.5",
     "drizzle-orm": "^0.44.5",
+    "drizzle-zod": "^0.8.3",
     "embla-carousel-react": "^8.6.0",
     "express": "^4.21.2",
     "express-session": "^1.18.1",
