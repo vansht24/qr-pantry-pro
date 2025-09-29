@@ -1,9 +1,10 @@
 import { createServer } from "http";
+import { Request, Response } from "express";
 import { storage } from "./storage.js";
 
-export async function registerRoutes(app) {
+export async function registerRoutes(app: any) {
   // Products API
-  app.get("/api/products", async (req, res) => {
+  app.get("/api/products", async (req: Request, res: Response) => {
     try {
       const products = await storage.getProducts();
       res.json(products);
@@ -13,7 +14,7 @@ export async function registerRoutes(app) {
     }
   });
 
-  app.get("/api/products/:id", async (req, res) => {
+  app.get("/api/products/:id", async (req: Request, res: Response) => {
     try {
       const product = await storage.getProduct(req.params.id);
       if (!product) {
@@ -26,7 +27,7 @@ export async function registerRoutes(app) {
     }
   });
 
-  app.post("/api/products", async (req, res) => {
+  app.post("/api/products", async (req: Request, res: Response) => {
     try {
       // Convert empty date strings to null to avoid database errors
       const productData = {
@@ -43,7 +44,7 @@ export async function registerRoutes(app) {
     }
   });
 
-  app.put("/api/products/:id", async (req, res) => {
+  app.put("/api/products/:id", async (req: Request, res: Response) => {
     try {
       // Convert empty date strings to null to avoid database errors
       const productData = {
@@ -64,7 +65,7 @@ export async function registerRoutes(app) {
   });
 
   // Customers API
-  app.get("/api/customers", async (req, res) => {
+  app.get("/api/customers", async (req: Request, res: Response) => {
     try {
       const customers = await storage.getCustomers();
       res.json(customers);
