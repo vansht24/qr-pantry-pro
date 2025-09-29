@@ -61,7 +61,7 @@ export default function AddProduct() {
     setFormData(prev => ({ ...prev, barcode: productId }))
   }
 
-  const handleSubmit = async (e)) => {
+  const handleSubmit = async (e) => {
     e.preventDefault()
     if (!formData.name || !formData.category || !formData.mrp || !formData.buying_cost) {
       toast({

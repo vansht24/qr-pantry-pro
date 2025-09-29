@@ -21,8 +21,8 @@ export default function Dashboard() {
     totalRevenue: 0,
     expiringProducts: 0,
     totalCustomers: 0,
-    lowStockProducts[],
-    expiringProductsList[]
+    lowStockProducts: [],
+    expiringProductsList: []
   })
   const [loading, setLoading] = useState(true)
 

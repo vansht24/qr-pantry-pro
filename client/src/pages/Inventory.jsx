@@ -51,15 +51,15 @@ export default function Inventory() {
     const stock = product.quantity_in_stock || 0;
     const minLevel = product.min_stock_level || 0;
     if (stock === 0) {
-      return { label: "Out of Stock", variant: "destructive" as const }
+      return { label: "Out of Stock", variant: "destructive" };
     } else if (stock <= minLevel) {
-      return { label: "Low Stock", variant: "secondary" as const }
+      return { label: "Low Stock", variant: "secondary" };
     } else {
-      return { label: "In Stock", variant: "default" as const }
+      return { label: "In Stock", variant: "default" };
     }
   }
 
-  const getExpiryStatus = (expiryDate?) => {
+  const getExpiryStatus = (expiryDate) => {
     if (!expiryDate) return null
     
     const expiry = new Date(expiryDate)
@@ -67,11 +67,11 @@ export default function Inventory() {
     const daysDiff = Math.ceil((expiry.getTime() - now.getTime()) / (1000 * 3600 * 24))
     
     if (daysDiff < 0) {
-      return { label: "Expired", variant: "destructive" as const }
+      return { label: "Expired", variant: "destructive" };
     } else if (daysDiff <= 7) {
-      return { label: `${daysDiff} days left`, variant: "secondary" as const }
+      return { label: `${daysDiff} days left`, variant: "secondary" };
     } else if (daysDiff <= 30) {
-      return { label: `${daysDiff} days left`, variant: "outline" as const }
+      return { label: `${daysDiff} days left`, variant: "outline" };
     }
     return null
   }

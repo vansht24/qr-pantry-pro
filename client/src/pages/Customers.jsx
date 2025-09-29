@@ -59,7 +59,7 @@ export default function Customers() {
     setFormData(prev => ({ ...prev, [field]: value }))
   }
 
-  const handleSubmit = async (e)) => {
+  const handleSubmit = async (e) => {
     e.preventDefault()
     if (!formData.name.trim()) {
       toast({
@@ -74,9 +74,9 @@ export default function Customers() {
     try {
       await api.createCustomer({
         name: formData.name,
-        phone: formData.phone |,
-        email: formData.email |,
-        address: formData.address |,
+        phone: formData.phone || null,
+        email: formData.email || null,
+        address: formData.address || null,
       })
 
       toast({
