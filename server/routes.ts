@@ -1,10 +1,10 @@
-import { createServer } from "http";
-import { Request, Response } from "express";
-import { storage } from "./storage.js";
+import type { Express } from "express";
+import { createServer, type Server } from "http";
+import { storage } from "./storage";
 
-export async function registerRoutes(app: any) {
+export async function registerRoutes(app: Express): Promise<Server> {
   // Products API
-  app.get("/api/products", async (req: Request, res: Response) => {
+  app.get("/api/products", async (req, res) => {
     try {
       const products = await storage.getProducts();
       res.json(products);
@@ -14,7 +14,7 @@ export async function registerRoutes(app: any) {
     }
   });
 
-  app.get("/api/products/:id", async (req: Request, res: Response) => {
+  app.get("/api/products/:id", async (req, res) => {
     try {
       const product = await storage.getProduct(req.params.id);
       if (!product) {
@@ -27,9 +27,9 @@ export async function registerRoutes(app: any) {
     }
   });
 
-  app.post("/api/products", async (req: Request, res: Response) => {
+  app.post("/api/products", async (req, res) => {
     try {
-      // Convert empty date strings to null to avoid database errors
+      // Convert empty date strings to null to avoid PostgreSQL errors
       const productData = {
         ...req.body,
         manufacturing_date: req.body.manufacturing_date || null,
@@ -44,9 +44,9 @@ export async function registerRoutes(app: any) {
     }
   });
 
-  app.put("/api/products/:id", async (req: Request, res: Response) => {
+  app.put("/api/products/:id", async (req, res) => {
     try {
-      // Convert empty date strings to null to avoid database errors
+      // Convert empty date strings to null to avoid PostgreSQL errors
       const productData = {
         ...req.body,
         manufacturing_date: req.body.manufacturing_date || null,
@@ -65,7 +65,7 @@ export async function registerRoutes(app: any) {
   });
 
   // Customers API
-  app.get("/api/customers", async (req: Request, res: Response) => {
+  app.get("/api/customers", async (req, res) => {
     try {
       const customers = await storage.getCustomers();
       res.json(customers);
@@ -141,9 +141,9 @@ export async function registerRoutes(app: any) {
   });
 
   // Inventory transactions API
-  app.get("/api/inventory/transactions", async (req, res) => {
+  app.get("/api/inventory-transactions", async (req, res) => {
     try {
-      const productId = req.query.product_id;
+      const productId = req.query.product_id as string;
       const transactions = await storage.getInventoryTransactions(productId);
       res.json(transactions);
     } catch (error) {
@@ -152,7 +152,7 @@ export async function registerRoutes(app: any) {
     }
   });
 
-  app.post("/api/inventory/transactions", async (req, res) => {
+  app.post("/api/inventory-transactions", async (req, res) => {
     try {
       const transaction = await storage.createInventoryTransaction(req.body);
       res.status(201).json(transaction);
@@ -165,7 +165,31 @@ export async function registerRoutes(app: any) {
   // Dashboard stats API
   app.get("/api/dashboard/stats", async (req, res) => {
     try {
-      const stats = await storage.getDashboardStats();
+      const products = await storage.getProducts();
+      const todayBills = await storage.getBillsForToday();
+      const allBills = await storage.getBills();
+      const customers = await storage.getCustomers();
+      
+      const lowStock = products.filter(p => (p.quantity_in_stock || 0) <= (p.min_stock_level || 0));
+      const expiring = products.filter(p => {
+        if (!p.expiry_date) return false;
+        const expiryDate = new Date(p.expiry_date);
+        const now = new Date();
+        const daysDiff = Math.ceil((expiryDate.getTime() - now.getTime()) / (1000 * 3600 * 24));
+        return daysDiff <= 7 && daysDiff >= 0;
+      });
+      
+      const stats = {
+        totalProducts: products.length,
+        lowStock: lowStock.length,
+        todaySales: todayBills.length,
+        totalRevenue: allBills.reduce((sum, bill) => sum + Number(bill.final_amount), 0),
+        expiringProducts: expiring.length,
+        totalCustomers: customers.length,
+        lowStockProducts: lowStock,
+        expiringProductsList: expiring
+      };
+      
       res.json(stats);
     } catch (error) {
       console.error("Error fetching dashboard stats:", error);
