@@ -72,6 +72,34 @@ export default function AddProduct() {
       return
     }
 
+    // Validate positive numbers
+    if (parseFloat(formData.mrp) <= 0 || parseFloat(formData.buying_cost) <= 0) {
+      toast({
+        title: "Error",
+        description: "MRP and Buying Cost must be greater than 0",
+        variant: "destructive",
+      })
+      return
+    }
+
+    if (formData.quantity_in_stock && parseInt(formData.quantity_in_stock) < 0) {
+      toast({
+        title: "Error",
+        description: "Stock quantity cannot be negative",
+        variant: "destructive",
+      })
+      return
+    }
+
+    if (formData.min_stock_level && parseInt(formData.min_stock_level) < 0) {
+      toast({
+        title: "Error",
+        description: "Minimum stock level cannot be negative",
+        variant: "destructive",
+      })
+      return
+    }
+
     setIsSubmitting(true)
     try {
       await api.createProduct({
@@ -181,6 +209,7 @@ export default function AddProduct() {
                       id="mrp"
                       type="number"
                       step="0.01"
+                      min="0.01"
                       value={formData.mrp}
                       onChange={(e) => handleInputChange("mrp", e.target.value)}
                       placeholder="0.00"
@@ -193,6 +222,7 @@ export default function AddProduct() {
                       id="buying_cost"
                       type="number"
                       step="0.01"
+                      min="0.01"
                       value={formData.buying_cost}
                       onChange={(e) => handleInputChange("buying_cost", e.target.value)}
                       placeholder="0.00"
@@ -204,6 +234,7 @@ export default function AddProduct() {
                     <Input
                       id="quantity_in_stock"
                       type="number"
+                      min="0"
                       value={formData.quantity_in_stock}
                       onChange={(e) => handleInputChange("quantity_in_stock", e.target.value)}
                       placeholder="0"
@@ -235,6 +266,7 @@ export default function AddProduct() {
                     <Input
                       id="min_stock_level"
                       type="number"
+                      min="0"
                       value={formData.min_stock_level}
                       onChange={(e) => handleInputChange("min_stock_level", e.target.value)}
                       placeholder="5"

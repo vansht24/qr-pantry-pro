@@ -56,7 +56,13 @@ export default function Customers() {
   }
 
   const handleInputChange = (field: string, value: string) => {
-    setFormData(prev => ({ ...prev, [field]: value }))
+    // Validate phone number to only allow digits, spaces, +, and -
+    if (field === "phone") {
+      const sanitized = value.replace(/[^0-9+\-\s]/g, "")
+      setFormData(prev => ({ ...prev, [field]: sanitized }))
+    } else {
+      setFormData(prev => ({ ...prev, [field]: value }))
+    }
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -65,6 +71,26 @@ export default function Customers() {
       toast({
         title: "Error",
         description: "Customer name is required",
+        variant: "destructive",
+      })
+      return
+    }
+
+    // Validate email format if provided
+    if (formData.email && !formData.email.match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/)) {
+      toast({
+        title: "Error",
+        description: "Please enter a valid email address",
+        variant: "destructive",
+      })
+      return
+    }
+
+    // Validate phone format if provided (10-15 digits)
+    if (formData.phone && !formData.phone.replace(/[\s+\-]/g, "").match(/^\d{10,15}$/)) {
+      toast({
+        title: "Error",
+        description: "Please enter a valid phone number (10-15 digits)",
         variant: "destructive",
       })
       return
