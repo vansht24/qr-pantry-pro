@@ -34,6 +34,7 @@ export default function NewBill() {
   const [isScannerOpen, setIsScannerOpen] = useState(false)
   const [isScanning, setIsScanning] = useState(false)
   const [scanner, setScanner] = useState<QrScanner | null>(null)
+  const [isProcessingScan, setIsProcessingScan] = useState(false)
   const { toast } = useToast()
   const navigate = useNavigate()
   const videoRef = useRef<HTMLVideoElement>(null)
@@ -41,6 +42,24 @@ export default function NewBill() {
   useEffect(() => {
     loadData()
   }, [])
+
+  // Cleanup scanner when dialog closes
+  useEffect(() => {
+    if (!isScannerOpen) {
+      stopCameraScanning()
+      setIsProcessingScan(false)
+    }
+  }, [isScannerOpen])
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (scanner) {
+        scanner.stop()
+        scanner.destroy()
+      }
+    }
+  }, [scanner])
 
   const loadData = async () => {
     try {
@@ -164,6 +183,13 @@ export default function NewBill() {
   }
 
   const handleQRCodeScan = async (qrData: string) => {
+    // Prevent duplicate scans
+    if (isProcessingScan) {
+      console.log("Already processing a scan, ignoring duplicate")
+      return
+    }
+    
+    setIsProcessingScan(true)
     console.log("Scanning QR Code:", qrData)
     console.log("Available products:", products.length)
     
@@ -178,7 +204,7 @@ export default function NewBill() {
         console.log("Found product by QR ID:", product)
         
         if (product) {
-          addProductToBill(product)
+          addProductToBill(product, 1)
           toast({
             title: "Product Added!",
             description: `${product.name} added to bill`,
@@ -188,7 +214,7 @@ export default function NewBill() {
           // Try to find by name as fallback
           const productByName = products.find(p => p.name === parsed.name)
           if (productByName) {
-            addProductToBill(productByName)
+            addProductToBill(productByName, 1)
             toast({
               title: "Product Added!",
               description: `${productByName.name} added to bill`,
@@ -206,7 +232,7 @@ export default function NewBill() {
         // Try to find by barcode or product ID
         const product = products.find(p => p.barcode === qrData || p.id === qrData)
         if (product) {
-          addProductToBill(product)
+          addProductToBill(product, 1)
           toast({
             title: "Product Added!",
             description: `${product.name} added to bill`,
@@ -225,7 +251,7 @@ export default function NewBill() {
       // Not a valid JSON, try to find by simple ID
       const product = products.find(p => p.barcode === qrData || p.id === qrData)
       if (product) {
-        addProductToBill(product)
+        addProductToBill(product, 1)
         toast({
           title: "Product Added!",
           description: `${product.name} added to bill`,
@@ -238,6 +264,8 @@ export default function NewBill() {
           variant: "destructive",
         })
       }
+    } finally {
+      setIsProcessingScan(false)
     }
   }
 
@@ -400,7 +428,7 @@ export default function NewBill() {
                     </div>
                     <Button
                       size="sm"
-                      onClick={() => addProductToBill(product)}
+                      onClick={() => addProductToBill(product, 1)}
                       disabled={(product.quantity_in_stock || 0) <= 0}
                     >
                       <Plus className="h-4 w-4" />
