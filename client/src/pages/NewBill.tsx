@@ -99,7 +99,15 @@ export default function NewBill() {
   }
 
   const removeItemFromBill = (productId: string) => {
-    setBillItems(prev => prev.filter(item => item.product.id !== productId))
+    const existingItem = billItems.find(item => item.product.id === productId)
+    
+    if (existingItem && existingItem.quantity > 1) {
+      // Reduce quantity by 1
+      updateItemQuantity(productId, existingItem.quantity - 1)
+    } else {
+      // Remove item completely if quantity is 1 or less
+      setBillItems(prev => prev.filter(item => item.product.id !== productId))
+    }
   }
 
   const calculateSubtotal = () => {
