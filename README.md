@@ -87,8 +87,11 @@ Here's a blank template to get started. To avoid retyping too much info, do a se
 
 * [![Next][Next.js]][Next-url]
 * [![React][React.js]][React-url]
-* [![Node][Node.js][Node-url]]
-* [![JQuery][JQuery.com]][JQuery-url]
+* [![Node][Node.js]][Node-url]]
+* [![Express][Express.js]][Express-url]
+* [![Tailwindcss][Tailwindcss.com]][Tailwind-url]
+* [![Typescript][Typescript]][Typescript-url]
+* [![Postgresql][postgresql.com]][Postgresql-url]
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
@@ -233,7 +236,10 @@ Project Link: [https://github.com/github_username/repo_name](https://github.com/
 [React-url]: https://reactjs.org/
 [Node.js]: https://img.shields.io/badge/node.js-339933?style=for-the-badge&logo=Node.js&logoColor=white
 [Node-url]: https://nodejs.org/en
-[Bootstrap.com]: https://img.shields.io/badge/Bootstrap-563D7C?style=for-the-badge&logo=bootstrap&logoColor=white
-[Bootstrap-url]: https://getbootstrap.com
-[JQuery.com]: https://img.shields.io/badge/jQuery-0769AD?style=for-the-badge&logo=jquery&logoColor=white
-[JQuery-url]: https://jquery.com 
+[Tailwindcss.com]: https://img.shields.io/badge/Tailwind_CSS-grey?style=for-the-badge&logo=tailwind-css&logoColor=38B2AC
+[Tailwind-url]: https://tailwindcss.com/
+[postgresql.com]: https://img.shields.io/badge/postgresql-4169e1?style=for-the-badge&logo=postgresql&logoColor=white
+[postgresql-url]: https://www.postgresql.org/ 
+[Typescript]: [https://img.shields.io/badge/React-20232A?style=for-the-badge&logo=react&logoColor=61DAFB](https://shields.io/badge/TypeScript-3178C6?logo=TypeScript&logoColor=FFF&style=flat-square)
+[typescript-url]: https://www.typescriptlang.org/
+
