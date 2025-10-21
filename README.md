@@ -90,7 +90,7 @@ Here's a blank template to get started. To avoid retyping too much info, do a se
 * [![Node][Node.js]][Node-url]
 * [![Express][Express.js]][Express-url]
 * [![Tailwindcss][Tailwindcss.com]][Tailwind-url]
-* [![Typescript][Typescript.com]][Typescript-url]
+* [![Typescript][Typescriptlang.org]][Typescript-url]
 * [![Postgresql][postgresql.com]][Postgresql-url]
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
@@ -116,7 +116,7 @@ This is an example of how to list things you need to use the software and how to
 1. Open terminal at source directory
 2. Clone the repo
    ```sh
-   git clone https://github.com/github_username/repo_name.git
+   git clone https://github.com/vansht24/qr-pantry-pro.git
    ```
 3. Install NPM packages
    ```sh
@@ -240,7 +240,7 @@ Project Link: [https://github.com/github_username/repo_name](https://github.com/
 [Tailwind-url]: https://tailwindcss.com/
 [postgresql.com]: https://img.shields.io/badge/postgresql-4169e1?style=for-the-badge&logo=postgresql&logoColor=white
 [postgresql-url]: https://www.postgresql.org/ 
-[Typescript.com]: [https://img.shields.io/badge/React-20232A?style=for-the-badge&logo=react&logoColor=61DAFB](https://shields.io/badge/TypeScript-3178C6?logo=TypeScript&logoColor=FFF&style=flat-square)
+[Typescriptlang.org]: https://shields.io/badge/TypeScript-3178C6?logo=TypeScript&logoColor=FFF&style=flat-square
 [Typescript-url]: https://www.typescriptlang.org/
 [Express.js]: https://img.shields.io/badge/express.js-000000?style=for-the-badge&logo=express&logoColor=white
 [Express-url]: https://expressjs.com/
