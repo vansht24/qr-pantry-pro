@@ -87,7 +87,7 @@ Here's a blank template to get started. To avoid retyping too much info, do a se
 
 * [![Next][Next.js]][Next-url]
 * [![React][React.js]][React-url]
-* [![Node][Node.js]][Node-url]]
+* [![Node][Node.js]][Node-url]
 * [![Express][Express.js]][Express-url]
 * [![Tailwindcss][Tailwindcss.com]][Tailwind-url]
 * [![Typescript][Typescript.com]][Typescript-url]
@@ -241,6 +241,6 @@ Project Link: [https://github.com/github_username/repo_name](https://github.com/
 [postgresql.com]: https://img.shields.io/badge/postgresql-4169e1?style=for-the-badge&logo=postgresql&logoColor=white
 [postgresql-url]: https://www.postgresql.org/ 
 [Typescript.com]: [https://img.shields.io/badge/React-20232A?style=for-the-badge&logo=react&logoColor=61DAFB](https://shields.io/badge/TypeScript-3178C6?logo=TypeScript&logoColor=FFF&style=flat-square)
-[typescript-url]: https://www.typescriptlang.org/
+[Typescript-url]: https://www.typescriptlang.org/
 [Express.js]: https://img.shields.io/badge/express.js-000000?style=for-the-badge&logo=express&logoColor=white
 [Express-url]: https://expressjs.com/
